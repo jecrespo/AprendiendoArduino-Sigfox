@@ -8,7 +8,7 @@
 
 // Set debug to false to enable continuous mode
 // and disable serial prints
-int debug = true;
+int debug = false;
 
 Timer t;
 dht DHT;
@@ -17,9 +17,9 @@ float umbral = 22;
 int alarm_state = 0;  // alarm 0 = normal, 1 = alarm
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
 
   if (debug == true) {
-
     Serial.begin(9600);
     while (!Serial) {}
   }
@@ -37,7 +37,7 @@ void setup() {
     SigFox.debug();
   }
 
-  t.every(60000, takeReading);
+  t.every(30000, takeReading);
   takeReading();  //When restart send data
 }
 
@@ -74,12 +74,13 @@ void takeReading() {
   }
 
   if (chk == DHTLIB_OK) {
-    Serial.println("Sending data....");
-    // DISPLAY DATA
-    Serial.print(DHT.temperature, 1);
-    Serial.print(",\t");
-    Serial.print(DHT.humidity, 1);
-    Serial.print(",\t");
+    if (debug == true) {
+      Serial.println("Sending data....");
+      Serial.print(DHT.temperature, 1);
+      Serial.print(",\t");
+      Serial.print(DHT.humidity, 1);
+      Serial.print(",\t");
+    }
 
     SigFox.begin();
 
@@ -94,31 +95,35 @@ void takeReading() {
 
     if ((temp > umbral) && (alarm_state == 0)) {
       alarm_state = 1;
-      alarm = 1; //alarm triggered
+      alarm = '1'; //alarm triggered
     }
-    
+
     if ((temp < umbral) && (alarm_state == 1)) {
       alarm_state = 0;
-      alarm = 2; //alarm restored
-    } 
+      alarm = '2'; //alarm restored
+    }
 
-    Serial.print("Datos enviados: ");
-    Serial.print(temp);
-    Serial.print(hum);
-    Serial.println(alarm);
-    Serial.print("Tamaño datos enviados: ");
-    Serial.println((String(temp) + String(hum) + String(alarm)).length());  //Todo lo que se manda es en caracteres
+    if (debug == true) {
+      Serial.print("Datos enviados: ");
+      Serial.print(temp);
+      Serial.print(hum);
+      Serial.println(alarm);
+      Serial.print("Tamaño datos enviados: ");
+      Serial.println((String(temp) + String(hum) + String(alarm)).length());  //Todo lo que se manda es en caracteres
+    }
 
     // 5 bytes (temp) + 5 bytes (hum) + 1 byte (alarm)  < 12 bytes
-    // backend configuration temperature::float:32 humidity::float:32 alarm::uint:8
+    // backend configuration temperature::char:5 humidity::char:5 alarm::char:1
     SigFox.beginPacket();
     SigFox.print(temp); //a value to send characters representing the value
     SigFox.print(hum);
     SigFox.print(alarm);
     int ret = SigFox.endPacket();
 
-    Serial.println(SigFox.status(SIGFOX));
-    Serial.println(SigFox.status(ATMEL));
+    if (debug == true) {
+      Serial.println(SigFox.status(SIGFOX));
+      Serial.println(SigFox.status(ATMEL));
+    }
 
     // shut down module, back to standby
     SigFox.end();
@@ -128,6 +133,13 @@ void takeReading() {
         Serial.println("No transmission");
       } else {
         Serial.println("Transmission ok");
+      }
+    }
+    else {
+      if (ret > 0) {
+        digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+        delay(1000);                       // wait for a second
+        digitalWrite(LED_BUILTIN, LOW);
       }
     }
   }
