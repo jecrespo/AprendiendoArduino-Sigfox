@@ -115,9 +115,13 @@ void takeReading() {
     // 5 bytes (temp) + 5 bytes (hum) + 1 byte (alarm)  < 12 bytes
     // backend configuration temperature::char:5 humidity::char:5 alarm::char:1
     SigFox.beginPacket();
-    SigFox.print(temp); //a value to send characters representing the value
-    SigFox.print(hum);
-    SigFox.print(alarm);
+    if ((temp < -9.99) || (temp > 99.99)) return; //Valores no válidos
+    if ((temp >= 0) && (temp < 10)) SigFox.print('0');
+    SigFox.print(temp);   //a value to send characters representing the value. From -9.00 9 99.99
+    if ((hum < 0) || (hum > 99.99)) return; //Valores no válidos
+    if ((hum >= 0) && (hum < 10)) SigFox.print('0');
+    SigFox.print(hum);    //From 00.00 a 99.99
+    SigFox.print(alarm);  // 0 = normal (no event), 1 = alarm triggered, 2 = restore alarm
     int ret = SigFox.endPacket();
 
     if (debug == true) {
