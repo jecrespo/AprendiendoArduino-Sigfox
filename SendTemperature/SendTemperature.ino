@@ -37,7 +37,7 @@ void setup() {
     SigFox.debug();
   }
 
-  t.every(30000, takeReading);
+  t.every(540000, takeReading); //9 minutes
   takeReading();  //When restart send data
 }
 
