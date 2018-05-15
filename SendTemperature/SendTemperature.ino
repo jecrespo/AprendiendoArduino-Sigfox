@@ -1,7 +1,7 @@
 #include <SigFox.h>
 #include <ArduinoLowPower.h>
 #include <Timer.h>
-#include <dht.h>
+#include <dht.h>  // Download from https://github.com/jecrespo/DHTlib use DHTstable version is stable for both ARM and AVR
 
 #define SIGFOX_FRAME_LENGTH 12
 #define DHT22_PIN 7
